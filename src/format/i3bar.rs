@@ -1,3 +1,4 @@
+use super::data::ClickAction::{Function, ShellCommand};
 use super::data::*;
 use serde_json::{self, Number, Value};
 use std::collections::BTreeMap;
@@ -10,7 +11,8 @@ struct I3Click {
 }
 
 pub struct I3BarFormatter {
-    handlers: BTreeMap<String, ClickAction>,
+    /// A map consisting of block instance names and a corresponding click action
+    handlers: BTreeMap<String, Vec<ClickAction>>,
 }
 
 impl Formatter for I3BarFormatter {
@@ -31,17 +33,19 @@ impl Formatter for I3BarFormatter {
     }
 
     fn handle_stdin(&self, line: Option<String>, fns: &mut BTreeMap<String, Box<FnMut()>>) {
-        if let Some(s) = line {
-            if let Ok(I3Click { instance, button }) = serde_json::from_str(&s.trim_matches(',')) {
-                match self.handlers.get(&instance) {
-                    Some(&ClickAction::Function(ref mb, ref name)) if mb.to_number() == button => {
-                        if let Some(f) = fns.get_mut(name) {
-                            f()
-                        }
+        // Parse click if there is one
+        let click: I3Click = match line.map(|s| serde_json::from_str(&s.trim_matches(','))) {
+            Some(Ok(click)) => click,
+            _ => return,
+        };
+        // Iterate over the instance's click bindings
+        if let Some(bindings) = self.handlers.get(&click.instance) {
+            for action in bindings {
+                match *action {
+                    Function(ref button, ref name) if button.to_number() == click.button => {
+                        fns.get_mut(name).map(|f| f());
                     }
-                    Some(&ClickAction::ShellCommand(ref mb, ref cmd))
-                        if mb.to_number() == button =>
-                    {
+                    ShellCommand(ref button, ref cmd) if button.to_number() == click.button => {
                         let _ = Command::new("sh")
                             .arg("-c")
                             .arg(cmd)
@@ -51,7 +55,7 @@ impl Formatter for I3BarFormatter {
                     _ => (),
                 }
             }
-        }
+        };
     }
 }
 
@@ -112,8 +116,18 @@ impl I3BarFormatter {
                 self.build(line, map, f);
             }
             Format::Clickable(ref act, ref f) => {
-                let _ = self.handlers.insert(act.to_string(), act.clone());
-                map.insert("instance", Value::String(act.to_string()));
+                let instance = map
+                    .entry("instance")
+                    .or_insert(Value::String(act.to_string()))
+                    .as_str()
+                    .unwrap()
+                    .to_owned();
+                // Add act to the handler or create it if it doesn't exist
+                self.handlers
+                    .entry(instance)
+                    .and_modify(|list| list.push(act.clone()))
+                    .or_insert(vec![act.clone()]);
+
                 self.build(line, map, f);
             }
         }

@@ -5,14 +5,29 @@ pub enum MouseButton {
     Left,
     Middle,
     Right,
+    ScrollUp,
+    ScrollDown,
+    ScrollLeft,
+    ScrollRight,
+    /// Button used to navigate backwards in browsers
+    NavBack,
+    /// Button used to navigate forwards in browsers
+    NavForward,
 }
 
 impl MouseButton {
-    pub fn to_number(&self) -> u8 {
+    pub fn to_number(self) -> u8 {
+        use MouseButton::*;
         match self {
-            &MouseButton::Left => 1,
-            &MouseButton::Middle => 2,
-            &MouseButton::Right => 3,
+            Left => 1,
+            Middle => 2,
+            Right => 3,
+            ScrollUp => 4,
+            ScrollDown => 5,
+            ScrollLeft => 6,
+            ScrollRight => 7,
+            NavBack => 8,
+            NavForward => 9,
         }
     }
 }

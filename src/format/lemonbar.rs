@@ -35,21 +35,13 @@ impl Formatter for LemonbarFormatter {
             Format::Clickable(ref act, ref f) => match act {
                 &ClickAction::ShellCommand(ref mb, ref a) => format!(
                     "%{{A{}:{}:}}{}%{{A}}",
-                    mouse_button(mb),
+                    mb.to_number(),
                     a.replace(":", "\\:"),
                     self.format(f)
                 ),
                 _ => self.format(f), // TODO
             },
         }
-    }
-}
-
-fn mouse_button(mb: &MouseButton) -> usize {
-    match *mb {
-        MouseButton::Left => 1,
-        MouseButton::Middle => 2,
-        MouseButton::Right => 3,
     }
 }
 

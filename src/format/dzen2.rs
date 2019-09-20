@@ -18,19 +18,11 @@ impl Formatter for Dzen2Formatter {
             Format::Padding(_, ref f) => self.format(f),
             Format::Clickable(ref act, ref f) => match act {
                 &ClickAction::ShellCommand(ref mb, ref a) => {
-                    format!("^ca({}, {}){}^ca()", mouse_button(mb), a, self.format(f))
+                    format!("^ca({}, {}){}^ca()", mb.to_number(), a, self.format(f))
                 }
                 _ => self.format(f), // TODO
             },
         }
-    }
-}
-
-fn mouse_button(mb: &MouseButton) -> usize {
-    match *mb {
-        MouseButton::Left => 1,
-        MouseButton::Right => 2,
-        MouseButton::Middle => 3,
     }
 }
 
