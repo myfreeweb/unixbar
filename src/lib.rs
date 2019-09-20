@@ -33,7 +33,7 @@ pub struct UnixBar<F: Formatter> {
 impl<F: Formatter> UnixBar<F> {
     pub fn new(formatter: F) -> UnixBar<F> {
         UnixBar {
-            formatter: formatter,
+            formatter,
             widgets: Vec::new(),
             fns: BTreeMap::new(),
         }
@@ -64,7 +64,7 @@ impl<F: Formatter> UnixBar<F> {
             let mut line = String::new();
             loop {
                 line.clear();
-                if let Ok(_) = stdin.read_line(&mut line) {
+                if stdin.read_line(&mut line).is_ok() {
                     stdin_tx.send(line.clone());
                 }
             }

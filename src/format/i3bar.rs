@@ -43,7 +43,9 @@ impl Formatter for I3BarFormatter {
             for action in bindings {
                 match *action {
                     Function(ref button, ref name) if button.to_number() == click.button => {
-                        fns.get_mut(name).map(|f| f());
+                        if let Some(f) = fns.get_mut(name) {
+                            f()
+                        }
                     }
                     ShellCommand(ref button, ref cmd) if button.to_number() == click.button => {
                         let _ = Command::new("sh")
@@ -61,7 +63,7 @@ impl Formatter for I3BarFormatter {
 
 impl I3BarFormatter {
     pub fn new() -> I3BarFormatter {
-        println!("{}", "{\"version\":1,\"click_events\":true}");
+        println!("{{\"version\":1,\"click_events\":true}}");
         println!("[");
         I3BarFormatter {
             handlers: BTreeMap::new(),
@@ -118,7 +120,7 @@ impl I3BarFormatter {
             Format::Clickable(ref act, ref f) => {
                 let instance = map
                     .entry("instance")
-                    .or_insert(Value::String(act.to_string()))
+                    .or_insert_with(|| Value::String(act.to_string()))
                     .as_str()
                     .unwrap()
                     .to_owned();
@@ -126,7 +128,7 @@ impl I3BarFormatter {
                 self.handlers
                     .entry(instance)
                     .and_modify(|list| list.push(act.clone()))
-                    .or_insert(vec![act.clone()]);
+                    .or_insert_with(|| vec![act.clone()]);
 
                 self.build(line, map, f);
             }

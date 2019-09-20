@@ -22,43 +22,43 @@ fn find_player(bus: &Connection) -> Option<String> {
 }
 
 fn extract_i64(item: &MessageItem) -> Option<i64> {
-    match item {
-        &MessageItem::Int16(x) => Some(x as i64),
-        &MessageItem::Int32(x) => Some(x as i64),
-        &MessageItem::Int64(x) => Some(x),
-        &MessageItem::UInt16(x) => Some(x as i64),
-        &MessageItem::UInt32(x) => Some(x as i64),
-        &MessageItem::Variant(ref x) => extract_i64(x),
+    match *item {
+        MessageItem::Int16(x) => Some(i64::from(x)),
+        MessageItem::Int32(x) => Some(i64::from(x)),
+        MessageItem::Int64(x) => Some(x),
+        MessageItem::UInt16(x) => Some(i64::from(x)),
+        MessageItem::UInt32(x) => Some(i64::from(x)),
+        MessageItem::Variant(ref x) => extract_i64(x),
         _ => None,
     }
 }
 
 fn extract_str(item: &MessageItem) -> Option<String> {
-    match item {
-        &MessageItem::Str(ref x) => Some((*x).clone()),
-        &MessageItem::Array(ref x, _) => Some(
+    match *item {
+        MessageItem::Str(ref x) => Some((*x).clone()),
+        MessageItem::Array(ref x, _) => Some(
             x.iter()
-                .map(|y| extract_str(y).unwrap_or("".to_owned()))
+                .map(|y| extract_str(y).unwrap_or_default())
                 .collect::<Vec<_>>()
                 .join(", "),
         ),
-        &MessageItem::Variant(ref x) => extract_str(x),
+        MessageItem::Variant(ref x) => extract_str(x),
         _ => None,
     }
 }
 
-fn get_entry<'a>(entries: &'a Vec<MessageItem>, key: &str) -> Option<&'a Box<MessageItem>> {
+fn get_entry<'a>(entries: &'a [MessageItem], key: &str) -> Option<&'a MessageItem> {
     entries
         .iter()
         .find(|e| match *e {
-            &MessageItem::DictEntry(ref k, _) => match **k {
+            MessageItem::DictEntry(ref k, _) => match **k {
                 MessageItem::Str(ref x) if x == key => true,
                 _ => false,
             },
             _ => false,
         })
-        .and_then(|e| match e {
-            &MessageItem::DictEntry(_, ref v) => Some(v),
+        .and_then(|e| match *e {
+            MessageItem::DictEntry(_, ref v) => Some(&**v),
             _ => None,
         })
 }
@@ -70,7 +70,7 @@ pub struct MPRISMusic {
 impl MPRISMusic {
     pub fn new() -> MPRISMusic {
         MPRISMusic {
-            last_value: Arc::new(RwLock::new(Format::Str("".to_owned()))),
+            last_value: Arc::new(RwLock::new(Format::Str(String::new()))),
         }
     }
 
@@ -144,16 +144,16 @@ where
                             let state = SongInfo {
                                 title: get_entry(metas, "xesam:title")
                                     .and_then(|m| extract_str(m))
-                                    .unwrap_or("".to_owned()),
+                                    .unwrap_or_default(),
                                 artist: get_entry(metas, "xesam:artist")
                                     .and_then(|m| extract_str(m))
-                                    .unwrap_or("".to_owned()),
+                                    .unwrap_or_default(),
                                 album: get_entry(metas, "xesam:album")
                                     .and_then(|m| extract_str(m))
-                                    .unwrap_or("".to_owned()),
+                                    .unwrap_or_default(),
                                 filename: get_entry(metas, "xesam:url")
                                     .and_then(|m| extract_str(m))
-                                    .unwrap_or("".to_owned()),
+                                    .unwrap_or_default(),
                                 musicbrainz_track: get_entry(metas, "xesam:musicBrainzTrackID")
                                     .and_then(|m| extract_str(m)),
                                 musicbrainz_artist: get_entry(metas, "xesam:musicBrainzArtistID")
@@ -187,7 +187,7 @@ where
 
                             let mut writer = last_value.write().unwrap();
                             *writer = (*updater)(state);
-                            let _ = tx.send(());
+                            tx.send(());
                         }
                     }
                 } else {
@@ -202,7 +202,7 @@ where
                         musicbrainz_album: None,
                         playback: None,
                     });
-                    let _ = tx.send(());
+                    tx.send(());
                     thread::sleep(Duration::from_millis(1000)); // more sleepy without player
                 }
 
@@ -212,5 +212,11 @@ where
                 thread::sleep(Duration::from_millis(500));
             }
         });
+    }
+}
+
+impl Default for MPRISMusic {
+    fn default() -> Self {
+        Self::new()
     }
 }

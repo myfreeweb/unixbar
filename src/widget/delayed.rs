@@ -35,7 +35,7 @@ where
                     *writer = (*formatter)(measurement.done());
                     measurement = (*updater)();
                 }
-                let _ = tx.send(());
+                tx.send(());
             }
         });
     }
@@ -48,7 +48,7 @@ where
 {
     pub fn new(interval: Duration, updater: U, formatter: F) -> Box<Delayed<T, F, U>> {
         Box::new(Delayed {
-            interval: interval,
+            interval,
             updater: Arc::new(Box::new(updater)),
             formatter: Arc::new(Box::new(formatter)),
             last_value: Arc::new(RwLock::new(Format::Str("".to_owned()))),

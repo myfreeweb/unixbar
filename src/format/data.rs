@@ -47,9 +47,9 @@ pub enum ClickAction {
 
 impl ClickAction {
     pub fn to_string(&self) -> String {
-        match self {
-            &ClickAction::Function(ref mb, ref name) => format!("f{:?}{}", mb, name),
-            &ClickAction::ShellCommand(ref mb, ref cmd) => format!("s{:?}{}", mb, cmd),
+        match *self {
+            ClickAction::Function(ref mb, ref name) => format!("f{:?}{}", mb, name),
+            ClickAction::ShellCommand(ref mb, ref cmd) => format!("s{:?}{}", mb, cmd),
         }
     }
 }
@@ -101,5 +101,5 @@ macro_rules! bfmt {
     (pad[$pad:expr] $($rest:tt)*) => { Format::Padding($pad, Box::new(bfmt!($($rest)*))) };
     (multi[$(($($rest:tt)*)),*]) => { Format::Concat(vec![ $( Box::new(bfmt!( $($rest)* )) ),* ]) };
     ($e:expr) => { $e };
-    () => { Format::UnescapedStr("".to_owned()) };
+    () => { Format::UnescapedStr(String::new()) };
 }

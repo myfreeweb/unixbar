@@ -32,8 +32,8 @@ impl Formatter for LemonbarFormatter {
             Format::BgColor(ref c, ref f) => format!("%{{B{}}}{}%{{B-}}", c, self.format(f)),
             Format::NoSeparator(ref f) => self.format(f),
             Format::Padding(_, ref f) => self.format(f),
-            Format::Clickable(ref act, ref f) => match act {
-                &ClickAction::ShellCommand(ref mb, ref a) => format!(
+            Format::Clickable(ref act, ref f) => match *act {
+                ClickAction::ShellCommand(ref mb, ref a) => format!(
                     "%{{A{}:{}:}}{}%{{A}}",
                     mb.to_number(),
                     a.replace(":", "\\:"),
@@ -53,5 +53,11 @@ impl LemonbarFormatter {
     /// Turn off escaping for e.g. lemonbar-xft
     pub fn new_noescape() -> LemonbarFormatter {
         LemonbarFormatter { escape: false }
+    }
+}
+
+impl Default for LemonbarFormatter {
+    fn default() -> Self {
+        Self::new()
     }
 }

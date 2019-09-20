@@ -62,7 +62,7 @@ where
     pub fn new(backend: B, updater: F) -> Box<Music<F, B>> {
         Box::new(Music {
             updater: Arc::new(Box::new(updater)),
-            backend: backend,
+            backend,
         })
     }
 }

@@ -23,7 +23,7 @@ where
 impl<W, F> Wrap<W, F> {
     pub fn new(wrapper: F, widget: Box<W>) -> Box<Wrap<W, F>> {
         Box::new(Wrap {
-            widget: widget,
+            widget,
             wrapper: Box::new(wrapper),
         })
     }

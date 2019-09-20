@@ -63,7 +63,7 @@ fn get_playback_info() -> Option<PlaybackInfo> {
         .spawn()
         .expect("Couldn't run `mpc` to get song info");
     for line in BufReader::new(mpc.stdout.unwrap()).lines() {
-        let line = line.unwrap_or("".to_owned());
+        let line = line.unwrap_or_default();
         match parse_playback_info(&line.into_bytes()) {
             IResult::Done(_, playback_info) => return Some(playback_info),
             _ => continue,
@@ -79,7 +79,7 @@ pub struct MPDMusic {
 impl MPDMusic {
     pub fn new() -> MPDMusic {
         MPDMusic {
-            last_value: Arc::new(RwLock::new(Format::Str("".to_owned()))),
+            last_value: Arc::new(RwLock::new(Format::Str(String::new()))),
         }
     }
 
@@ -127,10 +127,10 @@ where
         thread::spawn(move || {
             loop {
                 let state = SongInfo {
-                    title: mpc_get_format("%title%").unwrap_or("".to_owned()),
-                    artist: mpc_get_format("%artist%").unwrap_or("".to_owned()),
-                    album: mpc_get_format("%album%").unwrap_or("".to_owned()),
-                    filename: mpc_get_format("%file%").unwrap_or("".to_owned()),
+                    title: mpc_get_format("%title%").unwrap_or_default(),
+                    artist: mpc_get_format("%artist%").unwrap_or_default(),
+                    album: mpc_get_format("%album%").unwrap_or_default(),
+                    filename: mpc_get_format("%file%").unwrap_or_default(),
                     musicbrainz_track: None,
                     musicbrainz_artist: None,
                     musicbrainz_album: None,
@@ -141,7 +141,7 @@ where
                 {
                     let mut writer = last_value.write().unwrap();
                     *writer = (*updater)(state);
-                    let _ = tx.send(());
+                    tx.send(());
                 }
 
                 // Wait for event
@@ -152,5 +152,11 @@ where
                     .status();
             }
         });
+    }
+}
+
+impl Default for MPDMusic {
+    fn default() -> Self {
+        Self::new()
     }
 }

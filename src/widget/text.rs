@@ -15,6 +15,6 @@ impl Widget for Text {
 
 impl Text {
     pub fn new(text: Format) -> Box<Text> {
-        Box::new(Text { text: text })
+        Box::new(Text { text })
     }
 }

@@ -43,7 +43,7 @@ where
     pub fn new(backend: B, updater: F) -> Box<Volume<F, B>> {
         Box::new(Volume {
             updater: Arc::new(Box::new(updater)),
-            backend: backend,
+            backend,
         })
     }
 }

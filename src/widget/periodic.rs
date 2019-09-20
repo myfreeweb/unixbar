@@ -28,7 +28,7 @@ where
                 let mut writer = last_value.write().unwrap();
                 *writer = (*updater)();
             }
-            let _ = tx.send(());
+            tx.send(());
         });
     }
 }
@@ -40,7 +40,7 @@ where
     pub fn new(interval: Duration, updater: F) -> Box<Periodic<F>> {
         let v = updater();
         Box::new(Periodic {
-            interval: interval,
+            interval,
             updater: Arc::new(Box::new(updater)),
             last_value: Arc::new(RwLock::new(v)),
         })

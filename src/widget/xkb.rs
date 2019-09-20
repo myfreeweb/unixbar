@@ -65,7 +65,7 @@ where
                                 *id_writer = new_id;
                                 let mut writer = last_value.write().unwrap();
                                 *writer = (*formatter)(new_id);
-                                let _ = tx.send(());
+                                tx.send(());
                             }
                         }
                     }

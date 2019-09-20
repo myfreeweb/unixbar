@@ -1,5 +1,6 @@
 use super::data::*;
 
+#[derive(Default)]
 pub struct Dzen2Formatter;
 
 impl Formatter for Dzen2Formatter {
@@ -16,8 +17,8 @@ impl Formatter for Dzen2Formatter {
             Format::BgColor(ref c, ref f) => format!("^bg({}){}^bg()", c, self.format(f)),
             Format::NoSeparator(ref f) => self.format(f),
             Format::Padding(_, ref f) => self.format(f),
-            Format::Clickable(ref act, ref f) => match act {
-                &ClickAction::ShellCommand(ref mb, ref a) => {
+            Format::Clickable(ref act, ref f) => match *act {
+                ClickAction::ShellCommand(ref mb, ref a) => {
                     format!("^ca({}, {}){}^ca()", mb.to_number(), a, self.format(f))
                 }
                 _ => self.format(f), // TODO

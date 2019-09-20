@@ -20,7 +20,7 @@ pub struct ALSA {
 impl ALSA {
     pub fn new() -> ALSA {
         ALSA {
-            last_value: Arc::new(RwLock::new(Format::Str("".to_owned()))),
+            last_value: Arc::new(RwLock::new(Format::Str(String::new()))),
         }
     }
 
@@ -73,25 +73,31 @@ where
         }
 
         let last_value = self.last_value.clone();
-        thread::spawn(move || {
-            loop {
-                unsafe {
-                    let err = poll(fds.as_mut_ptr(), fds.len() as u64, -1);
-                    // TODO check error
-                }
-
-                match ctl.read() {
-                    Ok(Some(_)) => {
-                        let state = ALSA::get_volume_state();
-
-                        let mut writer = last_value.write().unwrap();
-                        *writer = (*updater)(state);
-                        let _ = tx.send(());
-                    }
-                    _ => continue,
+        thread::spawn(move || loop {
+            unsafe {
+                let err = poll(fds.as_mut_ptr(), fds.len() as u64, -1);
+                if err == -1 {
+                    libc::perror(std::ptr::null());
                 }
             }
+
+            match ctl.read() {
+                Ok(Some(_)) => {
+                    let state = ALSA::get_volume_state();
+
+                    let mut writer = last_value.write().unwrap();
+                    *writer = (*updater)(state);
+                    tx.send(());
+                }
+                _ => continue,
+            }
         });
+    }
+}
+
+impl Default for ALSA {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

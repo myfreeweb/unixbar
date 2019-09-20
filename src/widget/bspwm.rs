@@ -107,10 +107,10 @@ where
                     .expect("Couldn't run bspc");
                 for line in BufReader::new(bspc.stdout.unwrap()).lines() {
                     let mut writer = last_value.write().unwrap();
-                    let line = line.unwrap_or("".to_owned());
+                    let line = line.unwrap_or_default();
                     if let IResult::Done(_, result) = bspstr(&line.into_bytes()) {
                         *writer = (*updater)(result);
-                        let _ = tx.send(());
+                        tx.send(());
                     }
                 }
                 thread::sleep(Duration::from_millis(500));
@@ -126,7 +126,7 @@ where
     pub fn new(updater: F) -> Box<Bspwm<F>> {
         Box::new(Bspwm {
             updater: Arc::new(Box::new(updater)),
-            last_value: Arc::new(RwLock::new(Format::Str("".to_owned()))),
+            last_value: Arc::new(RwLock::new(Format::Str(String::new()))),
         })
     }
 }
